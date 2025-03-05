@@ -10,7 +10,6 @@ import schedule
 import time
 import logging
 
-
 # setup logger
 logger = setup_logging()
 
@@ -29,7 +28,6 @@ class SonarrYTDL(object):
         cfg = checkconfig()
 
         # Sonarr_YTDL Setup
-
         try:
             self.set_scan_interval(cfg['sonarrytdl']['scan_interval'])
             try:
@@ -51,7 +49,7 @@ class SonarrYTDL(object):
         try:
             scheme = "http"
             if cfg['sonarr']['ssl']:
-                scheme == "https"
+                scheme = "https"
             self.base_url = "{0}://{1}:{2}".format(
                 scheme,
                 cfg['sonarr']['host'],
@@ -64,10 +62,12 @@ class SonarrYTDL(object):
         # YTDL Setup
         try:
             self.ytdl_format = cfg['ytdl']['default_format']
+            self.username = cfg['ytdl'].get('username', None)
+            self.password = cfg['ytdl'].get('password', None)
         except Exception:
             sys.exit("Error with ytdl config.yml values.")
 
-        # YTDL Setup
+        # Series Setup
         try:
             self.series = cfg["series"]
         except Exception:
@@ -257,17 +257,26 @@ class SonarrYTDL(object):
                 ytdlopts.update({
                     'cookie': cookie_path
                 })
-                # if self.debug is True:
                 logger.debug('  Cookies file used: {}'.format(cookie_path))
             if cookie_exists is False:
-                logger.warning('  cookie files specified but doesn''t exist.')
+                logger.warning('  cookie files specified but doesn\'t exist.')
             return ytdlopts
         else:
             return ytdlopts
 
+    def append_credentials(self, ytdlopts):
+        """Append username and password to yt-dlp options if provided via config"""
+        if self.username:
+            ytdlopts.update({'username': self.username})
+            logger.debug('  Username provided for yt-dlp.')
+        if self.password:
+            ytdlopts.update({'password': self.password})
+            logger.debug('  Password provided for yt-dlp.')
+        return ytdlopts
+
     def customformat(self, ytdlopts, customformat=None):
-        """Checks if specified cookie file exists in config
-        - ``ytdlopts``: Youtube-dl options to change the ytdl format for
+        """Checks if specified custom format exists to change the ytdl format for
+        - ``ytdlopts``: Youtube-dl options to change the format for
         - ``customformat``: format to download
         returns:
             ytdlopts
@@ -288,7 +297,6 @@ class SonarrYTDL(object):
             'playlistreverse': playlistreverse,
             'matchtitle': regextitle,
             'quiet': True,
-
         }
         if self.debug is True:
             ytdlopts.update({
@@ -297,6 +305,7 @@ class SonarrYTDL(object):
                 'progress_hooks': [ytdl_hooks],
             })
         ytdlopts = self.appendcookie(ytdlopts, cookies)
+        ytdlopts = self.append_credentials(ytdlopts)
         if self.debug is True:
             logger.debug('Youtube-DL opts used for episode matching')
             logger.debug(ytdlopts)
@@ -358,6 +367,7 @@ class SonarrYTDL(object):
                                 'noplaylist': True,
                             }
                             ytdl_format_options = self.appendcookie(ytdl_format_options, cookies)
+                            ytdl_format_options = self.append_credentials(ytdl_format_options)
                             if 'format' in ser:
                                 ytdl_format_options = self.customformat(ytdl_format_options, ser['format'])
                             if 'subtitles' in ser:
@@ -377,7 +387,6 @@ class SonarrYTDL(object):
                                         'subtitleslangs': ser['subtitles_languages'],
                                         'postprocessors': postprocessors,
                                     })
-
 
                             if self.debug is True:
                                 ytdl_format_options.update({
@@ -423,3 +432,4 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(1)
+
