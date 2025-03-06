@@ -77,7 +77,7 @@ class SonarrYTDL(object):
         """Returns all episodes for the given series"""
         logger.debug('Begin call Sonarr for all episodes for series_id: {}'.format(series_id))
         args = {'seriesId': series_id}
-        res = self.request_get("{}/api/episode".format(
+        res = self.request_get("{}/api/v3/episode".format(
             self.base_url),
             args
         )
@@ -85,7 +85,7 @@ class SonarrYTDL(object):
 
     def get_episode_files_by_series_id(self, series_id):
         """Returns all episode files for the given series"""
-        res = self.request_get("{}/api/episodefile?seriesId={}".format(
+        res = self.request_get("{}/api/v3/episodefile?seriesId={}".format(
             self.base_url,
             series_id
         ))
@@ -94,7 +94,7 @@ class SonarrYTDL(object):
     def get_series(self):
         """Return all series in your collection"""
         logger.debug('Begin call Sonarr for all available series')
-        res = self.request_get("{}/api/series".format(
+        res = self.request_get("{}/api/v3/series".format(
             self.base_url
         ))
         return res.json()
@@ -102,7 +102,7 @@ class SonarrYTDL(object):
     def get_series_by_series_id(self, series_id):
         """Return the series with the matching ID or 404 if no matching series is found"""
         logger.debug('Begin call Sonarr for specific series series_id: {}'.format(series_id))
-        res = self.request_get("{}/api/series/{}".format(
+        res = self.request_get("{}/api/v3/series/{}".format(
             self.base_url,
             series_id
         ))
@@ -152,7 +152,7 @@ class SonarrYTDL(object):
             "seriesId": str(series_id)
         }
         res = self.request_put(
-            "{}/api/command".format(self.base_url),
+            "{}/api/v3/command".format(self.base_url),
             None,
             data
         )
